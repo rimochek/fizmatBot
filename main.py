@@ -4,7 +4,7 @@ import logging
 from loader import bot, dp, db, listOfCommands
 
 from handlers.users import start, clubs, events, changeLanguage, about
-from handlers.admins import adminMenu, redactClubs, redactEvents
+from handlers.admins import adminMenu, redactClubs, redactEvents, makeAnnounce
 
 async def main():
     logging.basicConfig(
@@ -16,7 +16,7 @@ async def main():
 
     dp.include_routers(
         start.router, clubs.router, events.router, changeLanguage.router, about.router,
-        adminMenu.router, redactClubs.router, redactEvents.router
+        adminMenu.router, redactClubs.router, redactEvents.router, makeAnnounce.router
     )
 
     db.create_tables()

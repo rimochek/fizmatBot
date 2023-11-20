@@ -32,3 +32,6 @@ class EventsStates(StatesGroup):
     enterEventDate = State()
     enterEventLink = State()
     enterEventIMG = State()
+
+class AnnounceStates(StatesGroup):
+    waiting_for_confirmation = State()

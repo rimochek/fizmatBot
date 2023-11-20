@@ -32,6 +32,11 @@ class DatabaseManager(object):
         except:
             logging.info(f"User: {values[0]}, не может быть добавлен в БД, так как он уже там находится")
             return False
+    
+    def get_all_users(self):
+        self.cur.execute("SELECT id FROM users")
+        users = self.cur.fetchall()
+        return users
 
     def add_message(self, message):
         values = [message.chat.id, message.from_user.username, message.text, message.date]

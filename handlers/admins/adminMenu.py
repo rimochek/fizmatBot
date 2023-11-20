@@ -1,6 +1,6 @@
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import Message, ReplyKeyboardRemove
 from aiogram.filters import Command
 
 from data.languagePreset import languages as lang
@@ -48,8 +48,8 @@ async def redact_events(message: Message, state: FSMContext):
 async def make_announce(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
     await message.answer(
-        text=general["events"],
-        reply_markup=redactEvents.send_markup(lg)
+        text=lang[lg]["makeAnnounce"],
+        reply_markup=ReplyKeyboardRemove()
     )
 
     await state.set_state(AdminMenuStates.announce)

@@ -73,7 +73,7 @@ async def enter_resident_name(message: Message, state: FSMContext):
     )
 
     if message.text == "0":
-        await state.update_data(link = "0")
+        await state.update_data(link = None)
     else:
         await state.update_data(link = message.text)
     await state.set_state(EventsStates.enterEventIMG)
@@ -102,7 +102,7 @@ async def enter_resident_number(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
     await message.answer(
         text=lang[lg]["eventAdded"],
-        reply_markup=ReplyKeyboardRemove()
+        reply_markup=redactEvents.send_markup(lg)
     )
     await state.set_state(AdminMenuStates.event)
 
@@ -116,13 +116,19 @@ async def enter_resident_number(message: Message, state: FSMContext):
 @router.message(AdminMenuStates.event, F.text.in_(redactEvents.deleteEvent))
 async def change_club(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
-    await message.answer(
-        text=lang[lg]["chooseEventToDelete"],
-        reply_markup=eventsPages.getInlinesAdmin(lg)[0]
-    )
+    if len(eventsPages.getInlinesAdmin(lg)):
+        await message.answer(
+            text=lang[lg]["chooseEventToDelete"],
+            reply_markup=eventsPages.getInlinesAdmin(lg)[0]
+        )
+    else:
+        await message.answer(
+            text=lang[lg]["noEvents"]
+        )
 
 @router.callback_query(eventsPages.AdminEventsInlinePages.filter())
 async def choosing_to_delete(query: CallbackQuery, callback_data: eventsPages.AdminEventsInlinePages):
+    lg = db.get_user_language(query.message.chat.id)
     eventToDelete = Events()
     imageToDelete = None
     for i in getEvents(db.get_user_language(query.message.chat.id)):
@@ -137,6 +143,18 @@ async def choosing_to_delete(query: CallbackQuery, callback_data: eventsPages.Ad
         chat_id=query.message.chat.id,
         text = "Deleted"
     )
+    if len(eventsPages.getInlinesAdmin(lg)):
+        await bot.edit_message_reply_markup(
+            chat_id=query.message.chat.id,
+            message_id=query.message.message_id,
+            reply_markup=eventsPages.getInlinesAdmin(lg)[0]
+        )
+    else:
+        await bot.edit_message_reply_markup(
+            chat_id=query.message.chat.id,
+            message_id=query.message.message_id,
+            reply_markup=None
+        )
 
 @router.message(AdminMenuStates.event, F.text.in_(redactEvents.back))
 async def back(message: Message, state: FSMContext):

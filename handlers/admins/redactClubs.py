@@ -99,7 +99,7 @@ async def get_instagram(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
     await message.answer(
         text=lang[lg]["clubAdded"],
-        reply_markup=redactClubs.send_markup(lg)
+        reply_markup=redactClubs.send_markup(lg),
     )
     await state.update_data(instagram = message.text)
     data = await state.get_data()
@@ -108,9 +108,7 @@ async def get_instagram(message: Message, state: FSMContext):
     await state.set_state(AdminMenuStates.clubs)
 
 
-'''
-    DELETE
-'''
+
 @router.message(AdminMenuStates.clubs, F.text.in_(redactClubs.deleteClub))
 async def change_club(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
@@ -121,6 +119,7 @@ async def change_club(message: Message, state: FSMContext):
 
 @router.callback_query(clubsPages.AdminClubsInlinePages.filter())
 async def choosing_to_delete(query: CallbackQuery, callback_data: clubsPages.AdminClubsInlinePages):
+    lg = db.get_user_language(query.message.chat.id)
     clubToDelete = Clubs()
     imageToDelete = None
     for i in getClubs(db.get_user_language(query.message.chat.id)):
@@ -133,8 +132,21 @@ async def choosing_to_delete(query: CallbackQuery, callback_data: clubsPages.Adm
         os.remove(imageToDelete)
     await bot.send_message(
         chat_id=query.message.chat.id,
-        text = "Deleted"
+        text = "Deleted",
+        reply_markup=menu.send_markup(lg)
     )
+    if len(clubsPages.getInlinesAdmin(lg)):
+        await bot.edit_message_reply_markup(
+            chat_id=query.message.chat.id,
+            message_id=query.message.message_id,
+            reply_markup=clubsPages.getInlinesAdmin(0)[0]
+        )
+    else:
+        await bot.edit_message_reply_markup(
+            chat_id=query.message.message_id,
+            message_id=query.message.message_id,
+            reply_markup=None
+        )
 
 @router.message(AdminMenuStates.clubs, F.text.in_(redactClubs.back))
 async def back(message: Message, state: FSMContext):
