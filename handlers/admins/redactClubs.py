@@ -126,10 +126,11 @@ async def choosing_to_delete(query: CallbackQuery, callback_data: clubsPages.Adm
     for i in getClubs(db.get_user_language(query.message.chat.id)):
         if callback_data.club == i.callName:
             clubToDelete = i
-            imageToDelete = i.image
+            if i.image != "data/media/nspmLogo.png":
+                imageToDelete = i.image
     deleteClub(clubToDelete.name)
     if imageToDelete != None:
-        os.remove(f"data/media/clubs/{imageToDelete}")
+        os.remove(imageToDelete)
     await bot.send_message(
         chat_id=query.message.chat.id,
         text = "Deleted"

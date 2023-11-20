@@ -127,11 +127,12 @@ async def choosing_to_delete(query: CallbackQuery, callback_data: eventsPages.Ad
     imageToDelete = None
     for i in getEvents(db.get_user_language(query.message.chat.id)):
         if callback_data.event == i.callName:
-            imageToDelete = i.image
             eventToDelete = i
+            if i.image != "data/media/nspmLogo.png":
+                imageToDelete = i.image
     deleteEvent(eventToDelete.name)
     if imageToDelete != None:
-        os.remove(f"data/media/events/{imageToDelete}")
+        os.remove({imageToDelete})
     await bot.send_message(
         chat_id=query.message.chat.id,
         text = "Deleted"
