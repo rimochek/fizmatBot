@@ -1,0 +1,15 @@
+#LOGS
+*.log
+
+#IMAGES
+*.png
+*.jpg
+
+#DB
+*.db
+*.sqlite
+
+.vscode/
+.DS_Store
+__pycache__/
+.env
