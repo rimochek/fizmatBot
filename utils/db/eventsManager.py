@@ -15,7 +15,7 @@ class Events:
     place = ""
     date = ""
     link = ""
-    image = [r"root\fizmatbot\photos\events"]
+    image = "root\fizmatbot\photos\events"
 
 def getEvents(lg):
     eventslg = "eventsKZ"

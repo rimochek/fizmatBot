@@ -1,4 +1,5 @@
 import random
+import os
 
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
@@ -70,7 +71,11 @@ async def enter_resident_name(message: Message, state: FSMContext):
         text=lang[lg]["sendEventImage"],
         reply_markup=ReplyKeyboardRemove()
     )
-    await state.update_data(link = message.text)
+
+    if message.text == "0":
+        await state.update_data(link = "0")
+    else:
+        await state.update_data(link = message.text)
     await state.set_state(EventsStates.enterEventIMG)
 
 @router.message(EventsStates.enterEventIMG, F.photo)
@@ -119,12 +124,14 @@ async def change_club(message: Message, state: FSMContext):
 @router.callback_query(eventsPages.AdminEventsInlinePages.filter())
 async def choosing_to_delete(query: CallbackQuery, callback_data: eventsPages.AdminEventsInlinePages):
     eventToDelete = Events()
+    imageToDelete = None
     for i in getEvents(db.get_user_language(query.message.chat.id)):
-        print(i)
         if callback_data.event == i.callName:
-            print("got you")
+            imageToDelete = i.image
             eventToDelete = i
     deleteEvent(eventToDelete.name)
+    if imageToDelete != None:
+        os.remove(f"data/media/events/{imageToDelete}")
     await bot.send_message(
         chat_id=query.message.chat.id,
         text = "Deleted"

@@ -84,13 +84,21 @@ async def back_page(query: CallbackQuery, callback_data: AdminEventsInlinePages)
 async def club_info(query: CallbackQuery, callback_data: EventsInlinePages):
     info = getEventInfo(db.get_user_language(query.message.chat.id), callback_data.event)
 
-    await bot.send_photo(
-        chat_id=query.message.chat.id,
-        photo=info[2],
-        caption=info[0],
-        reply_markup=info[1],
-        parse_mode="markdown"
-    )
+    if info[1] != None or info[1] != "":
+      await bot.send_photo(
+         chat_id=query.message.chat.id,
+         photo=info[2],
+         caption=info[0],
+         reply_markup=info[1],
+         parse_mode="markdown"
+      )
+    else:
+      await bot.send_photo(
+         chat_id=query.message.chat.id,
+         photo=info[2],
+         caption=info[0],
+         parse_mode="markdown"
+      )
 
 
 maxPages = len(getInlines("kz"))
