@@ -32,7 +32,8 @@ backRU = ReplyKeyboardMarkup(
         [
             KeyboardButton(text=back[0])
         ]
-    ]
+    ],
+    resize_keyboard=True
 )
 
 backKZ = ReplyKeyboardMarkup(
@@ -40,7 +41,8 @@ backKZ = ReplyKeyboardMarkup(
         [
             KeyboardButton(text=back[1])
         ]
-    ]
+    ],
+    resize_keyboard=True
 )
 
 def send_back(language):
