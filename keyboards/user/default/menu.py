@@ -3,6 +3,7 @@ from aiogram.types import ReplyKeyboardMarkup, KeyboardButton, WebAppInfo
 clubs = ['🍻 Клубы', '🍻 Клубтар']
 events = ['🎲 Ивенты', '🎲 Ивенты']
 schedule = ['📅 Расписание', '📅 Кесте']
+suggestSong = ["🎸 Предложить трек", "🎸 Трек ұсыныңыз"]
 changeLanguage = ['📜 Поменять язык', '📜 Тілді өзгерту']
 about = ['О боте', 'Бот туралы']
 
@@ -16,6 +17,9 @@ menuRU = ReplyKeyboardMarkup(
         ],
         [
             KeyboardButton(text=schedule[0], web_app=scheduleWebApp),
+        ],
+        [
+            KeyboardButton(text=suggestSong[0]),
         ],
         [
             KeyboardButton(text=changeLanguage[0]),
@@ -33,6 +37,9 @@ menuKZ = ReplyKeyboardMarkup(
         ],
         [
             KeyboardButton(text=schedule[1], web_app=scheduleWebApp),
+        ],
+        [
+            KeyboardButton(text=suggestSong[1]),
         ],
         [
             KeyboardButton(text=changeLanguage[1]),

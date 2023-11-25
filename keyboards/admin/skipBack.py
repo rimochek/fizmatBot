@@ -1,16 +1,12 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
-newEvent = ["Добавить новый ивент", "Жаңа ивент қосыңыз"]
-deleteEvent = ["Удалить существующий ивент", "Бар ивент жою"]
+skip = ["Пропустить", "Өткізіп жіберу"]
 back = ['Назад', 'Артқа']
 
 menuRU = ReplyKeyboardMarkup(
     keyboard=[
         [
-            KeyboardButton(text=newEvent[0]),
-        ],
-        [
-            KeyboardButton(text=deleteEvent[0]),
+            KeyboardButton(text=skip[0]),
         ],
         [
             KeyboardButton(text=back[0]),
@@ -22,10 +18,7 @@ menuRU = ReplyKeyboardMarkup(
 menuKZ = ReplyKeyboardMarkup(
     keyboard=[
         [
-            KeyboardButton(text=newEvent[1]),
-        ],
-        [
-            KeyboardButton(text=deleteEvent[1]),
+            KeyboardButton(text=skip[1]),
         ],
         [
             KeyboardButton(text=back[1]),
@@ -33,6 +26,28 @@ menuKZ = ReplyKeyboardMarkup(
     ],
     resize_keyboard=True
 )
+
+backRU = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text=back[0])
+        ]
+    ]
+)
+
+backKZ = ReplyKeyboardMarkup(
+    keyboard=[
+        [
+            KeyboardButton(text=back[1])
+        ]
+    ]
+)
+
+def send_back(language):
+    if language == "ru":
+        return backRU
+    else:
+        return backKZ
 
 def send_markup(language):
     if language == "ru":

@@ -3,15 +3,15 @@ import os
 
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, ReplyKeyboardRemove, CallbackQuery
+from aiogram.types import Message, CallbackQuery
 
 from utils.db.eventsManager import Events, addNewEvent, deleteEvent, getEvents
 from data.languagePreset import languages as lang
 from data.languagePreset import general
 from states.states import AdminMenuStates, EventsStates
-from keyboards.admin import menu, redactEvents
+from keyboards.admin import menu, redactEvents, skipBack
 from keyboards.user.inline import eventsPages
-from loader import db, bot
+from loader import db, bot, messageLettersLimit, scheduler
 
 router = Router()
 
@@ -20,70 +20,103 @@ async def add_new_club(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
     await message.answer(
         text=lang[lg]["writeEventName"],
-        reply_markup=ReplyKeyboardRemove()
+        reply_markup=skipBack.send_back(lg)
     )
     await state.set_state(EventsStates.enterEventName)
 
 @router.message(EventsStates.enterEventName)
 async def add_club_name(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
-    await message.answer(
-        text=lang[lg]["writeEventDescription"],
-        reply_markup=ReplyKeyboardRemove()
-    )
-    await state.update_data(name = message.text)
-    await state.set_state(EventsStates.enterEventDescription)
+    if message.text in skipBack.back:
+        await back(message, state)
+    else:
+        await message.answer(
+            text=lang[lg]["writeEventDescription"],
+            reply_markup=skipBack.send_markup(lg)
+        )
+        await state.update_data(name = message.text)
+        await state.set_state(EventsStates.enterEventDescription)
 
 @router.message(EventsStates.enterEventDescription)
 async def add_club_description(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
-    await message.answer(
-        text=lang[lg]["writeEventPlace"],
-        reply_markup=ReplyKeyboardRemove()
-    )
-    await state.update_data(description = message.text)
-    await state.set_state(EventsStates.enterEventPlace)
+    if message.text in skipBack.back:
+        await back(message, state)
+    else:
+        if len(message.text) > messageLettersLimit:
+            await message.answer(
+                text=lang[lg]["captionIsTooLong"]
+            )
+            await message.answer(
+                text=lang[lg]["writeEventDescription"],
+                reply_markup=skipBack.send_markup(lg)
+            )
+            await state.set_state(EventsStates.enterEventDescription)
+        else:
+            await message.answer(
+                text=lang[lg]["writeEventPlace"],
+                reply_markup=skipBack.send_markup(lg)
+            )
+            await state.set_state(EventsStates.enterEventPlace)
+        if message.text in skipBack.skip:
+            await state.update_data(description = None)
+        else:
+            await state.update_data(description = message.text)
 
 @router.message(EventsStates.enterEventPlace)
 async def add_club_image(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
-    await message.answer(
-        text=lang[lg]["writeEventDate"],
-        reply_markup=ReplyKeyboardRemove()
-    )
-    await state.update_data(place = message.text)
-    await state.set_state(EventsStates.enterEventDate)
+    if message.text in skipBack.back:
+        await back(message, state)
+    else:
+        await message.answer(
+            text=lang[lg]["writeEventDate"],
+            reply_markup=skipBack.send_markup(lg)
+        )
+        await state.set_state(EventsStates.enterEventDate)
+        if message.text in skipBack.skip:
+            await state.update_data(place = None)
+        else:
+            await state.update_data(place = message.text)
 
 @router.message(EventsStates.enterEventDate)
 async def add_club_image(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
-    await message.answer(
-        text=lang[lg]["sendLinkToEvent"],
-        reply_markup=ReplyKeyboardRemove()
-    )
-    await state.update_data(date = message.text)
-    await state.set_state(EventsStates.enterEventLink)
+    if message.text in skipBack.back:
+        await back(message, state)
+    else:
+        await message.answer(
+            text=lang[lg]["sendLinkToEvent"],
+            reply_markup=skipBack.send_markup(lg)
+        )
+        await state.set_state(EventsStates.enterEventLink)
+        if message.text in skipBack.skip:
+            await state.update_data(date = None)
+        else:
+            await state.update_data(date = message.text)
 
 @router.message(EventsStates.enterEventLink)
 async def enter_resident_name(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
-    await message.answer(
-        text=lang[lg]["sendEventImage"],
-        reply_markup=ReplyKeyboardRemove()
-    )
-
-    if message.text == "0":
-        await state.update_data(link = None)
+    if message.text in skipBack.back:
+        await back(message, state)
     else:
-        await state.update_data(link = message.text)
-    await state.set_state(EventsStates.enterEventIMG)
+        await message.answer(
+            text=lang[lg]["sendEventImage"],
+            reply_markup=skipBack.send_markup(lg)
+        )
+        await state.set_state(EventsStates.enterEventIMG)
+        if message.text in skipBack.skip:
+            await state.update_data(link = None)
+        else:
+            await state.update_data(link = message.text)
 
 @router.message(EventsStates.enterEventIMG, F.photo)
 async def enter_resident_number(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
     await message.answer(
         text=lang[lg]["eventAdded"],
-        reply_markup=ReplyKeyboardRemove()
+        reply_markup=redactEvents.send_markup(lg)
     )
     await state.set_state(AdminMenuStates.event)
 
@@ -105,8 +138,6 @@ async def enter_resident_number(message: Message, state: FSMContext):
         reply_markup=redactEvents.send_markup(lg)
     )
     await state.set_state(AdminMenuStates.event)
-
-    #Download file
     await state.update_data(img = None)
 
     addNewEvent(await state.get_data())
@@ -157,10 +188,52 @@ async def choosing_to_delete(query: CallbackQuery, callback_data: eventsPages.Ad
         )
 
 @router.message(AdminMenuStates.event, F.text.in_(redactEvents.back))
-async def back(message: Message, state: FSMContext):
+async def backToMenu(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
     await message.answer(
         text=general["adminMenu"],
         reply_markup=menu.send_markup(lg)
     )
     await state.set_state(AdminMenuStates.menu)
+
+
+
+async def back(message: Message, state: FSMContext):
+    lg = db.get_user_language(message.chat.id)
+    state_ = await state.get_state()
+    if state_ == EventsStates.enterEventName:
+        await message.answer(
+            text=general["adminMenu"],
+            reply_markup=menu.send_markup(lg)
+        )
+        await state.set_state(AdminMenuStates.menu)
+    elif state_ == EventsStates.enterEventDescription:
+        await message.answer(
+            text=lang[lg]["writeEventName"],
+            reply_markup=skipBack.send_back(lg)
+        )
+        await state.set_state(EventsStates.enterEventName)
+    elif state_ == EventsStates.enterEventPlace:
+        await message.answer(
+            text=lang[lg]["writeEventDescription"],
+            reply_markup=skipBack.send_markup(lg)
+        )
+        await state.set_state(EventsStates.enterEventDescription)
+    elif state_ == EventsStates.enterEventDate:
+        await message.answer(
+            text=lang[lg]["writeEventPlace"],
+            reply_markup=skipBack.send_markup(lg)
+        )
+        await state.set_state(EventsStates.enterEventPlace)
+    elif state_ == EventsStates.enterEventLink:
+        await message.answer(
+            text=lang[lg]["writeEventDate"],
+            reply_markup=skipBack.send_markup(lg)
+        )
+        await state.set_state(EventsStates.enterEventDate)
+    elif state_ == EventsStates.enterEventIMG:
+        await message.answer(
+            text=lang[lg]["sendLinkToEvent"],
+            reply_markup=skipBack.send_markup(lg)
+        )
+        await state.set_state(EventsStates.enterEventLink)

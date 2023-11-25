@@ -8,7 +8,7 @@ from data.languagePreset import general
 from states.states import AdminMenuStates
 from keyboards.admin import menu, redactClubs, redactEvents
 from keyboards.user.default.menu import send_menu
-from loader import db, admins
+from loader import db, admins, suggestedSongEditor
 
 router = Router()
 
@@ -63,3 +63,20 @@ async def back(message: Message, state: FSMContext):
     )
 
     await state.clear()
+
+@router.message(AdminMenuStates.menu, F.text.in_(menu.getSuggestedSongs))
+async def get_suggested_songs(message: Message, state: FSMContext):
+    lg = db.get_user_language(message.chat.id)
+    songs = suggestedSongEditor.getSongs()
+    text = ""
+    for song in songs:
+        text = text + f"`{song}`\n"
+    if text:
+        await message.answer(
+            text=text,
+            parse_mode="Markdown"
+        )
+    else:
+        await message.answer(
+            text=lang[lg]["noSongs"]
+        )

@@ -35,3 +35,6 @@ class EventsStates(StatesGroup):
 
 class AnnounceStates(StatesGroup):
     waiting_for_confirmation = State()
+
+class SuggestSongStates(StatesGroup):
+    writingSong = State()

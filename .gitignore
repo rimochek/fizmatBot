@@ -1,5 +1,6 @@
 #LOGS
 *.log
+*.txt
 
 #IMAGES
 *.png

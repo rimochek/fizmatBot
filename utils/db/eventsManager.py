@@ -1,9 +1,12 @@
 import sqlite3 as sqlite
 import logging
 
+from datetime import date
+
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 from aiogram.types.input_file import FSInputFile
 from data.languagePreset import languages as lang
+from loader import scheduler
 
 conn = sqlite.connect("data/extracurricular.sqlite")
 cur = conn.cursor()
@@ -66,8 +69,10 @@ def getEventInfo(lg, callName):
             text = f"*{i.name}*"
             if i.description != None:
                 text = text + f"\n\n*{lang[lg]['description']}*\n{i.description}"
-            text = text + f"\n\n*{lang[lg]['date']}*\n{i.date}"
-            text = text + f"\n\n*{lang[lg]['place']}*\n{i.place}"
+            if i.date != None:
+                text = text + f"\n\n*{lang[lg]['date']}*\n{i.date}"
+            if i.place != None:
+                text = text + f"\n\n*{lang[lg]['place']}*\n{i.place}"
             if i.link != None:
                 markup.append([InlineKeyboardButton(text="Instagram", url=i.link)])
             return [text, InlineKeyboardMarkup(inline_keyboard=markup), FSInputFile(i.image)]
@@ -79,6 +84,9 @@ def addNewEvent(data: dict):
     cur.execute("INSERT INTO eventsRU VALUES(?, ?, ?, ?, ?, ?)", values)
     conn.commit()
     logging.info(f"Добавил новый ивент: {values[0]}")
+    if values[3]:
+        date_ = values[3].split(".")
+        scheduler.add_job(deleteEvent, "date", run_date=date(date_[0], date_[1], date_[2]), args=(values[0]))
 
 def deleteEvent(name):
     cur.execute("DELETE FROM eventsKZ WHERE name = ?", (name,))

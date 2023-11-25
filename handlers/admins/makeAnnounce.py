@@ -1,7 +1,11 @@
+import logging
+
+from asyncio import sleep
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, ReplyKeyboardRemove
 
+from keyboards.admin import skipBack
 from keyboards.admin.makeAnnounce import send_markup, yes, no
 from states.states import AdminMenuStates, AnnounceStates
 from data.languagePreset import languages as lang
@@ -44,25 +48,34 @@ async def send_to_every(message: Message, state: FSMContext):
     users = db.get_all_users()
     data = await state.get_data()
 
-    #sending for every user
-    for i in users:
-        print(data.get("text"))
-        if data.get("img") != None:
-            await bot.send_photo(
-                chat_id=i[0],
-                caption=data.get("text"),
-                photo=data.get("img").file_id
-            )
-        else:
-            await bot.send_message(
-                chat_id=i[0],
-                text=data.get("text")
-            )
     await message.answer(
         text=general["adminMenu"],
         reply_markup=menu.send_markup(lg)
     )
     await state.set_state(AdminMenuStates.menu)
+    #sending for every user
+    for i in users:
+        await sleep(0.1)
+        if data.get("img") != None:
+            try:
+                await bot.send_photo(
+                    chat_id=i[0],
+                    caption=data.get("text"),
+                    photo=data.get("img").file_id
+                )
+            except:
+                logging.info(f"Can't send to user: {i[0]}, because blocked")
+        else:
+            try:
+                await bot.send_message(
+                    chat_id=i[0],
+                    text=data.get("text")
+                )
+            except:
+                logging.info(f"Can't send to user: {i[0]}, because blocked")
+    await message.answer(
+        text=lang[lg]["messageSendedToEveryUser"]
+    )
 
 @router.message(AnnounceStates.waiting_for_confirmation, F.text.in_(no))
 async def send_to_every(message: Message, state: FSMContext):

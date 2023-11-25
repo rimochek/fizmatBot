@@ -1,7 +1,6 @@
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 
 newClub = ["Добавить новый клуб", "Жаңа клуб қосыңыз"]
-changeClub = ["Изменить клуб", "Клубты өзгерту"]
 deleteClub = ["Удалить существующий клуб", "Бар клубты жою"]
 back = ['Назад', 'Артқа']
 
@@ -9,9 +8,6 @@ menuRU = ReplyKeyboardMarkup(
     keyboard=[
         [
             KeyboardButton(text=newClub[0]),
-        ],
-        [
-            KeyboardButton(text=changeClub[0]),
         ],
         [
             KeyboardButton(text=deleteClub[0]),
@@ -27,9 +23,6 @@ menuKZ = ReplyKeyboardMarkup(
     keyboard=[
         [
             KeyboardButton(text=newClub[1]),
-        ],
-        [
-            KeyboardButton(text=changeClub[1]),
         ],
         [
             KeyboardButton(text=deleteClub[1]),
