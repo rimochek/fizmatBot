@@ -78,6 +78,25 @@ def getEventInfo(lg, callName):
             return [text, InlineKeyboardMarkup(inline_keyboard=markup), FSInputFile(i.image)]
     return None
 
+def getEventInfoByName(lg, name):
+    events = getEvents(lg)
+    text = ""
+    markup = []
+
+    for i in events:
+        if i.name == name:
+            text = f"*{i.name}*"
+            if i.description != None:
+                text = text + f"\n\n*{lang[lg]['description']}*\n{i.description}"
+            if i.date != None:
+                text = text + f"\n\n*{lang[lg]['date']}*\n{i.date}"
+            if i.place != None:
+                text = text + f"\n\n*{lang[lg]['place']}*\n{i.place}"
+            if i.link != None:
+                markup.append([InlineKeyboardButton(text="Instagram", url=i.link)])
+            return [text, InlineKeyboardMarkup(inline_keyboard=markup), FSInputFile(i.image)]
+    return None
+
 def addNewEvent(data: dict):
     values = [data.get("name"), data.get("description"), data.get("place"), data.get("date"), data.get("link"), data.get("img")]
     cur.execute("INSERT INTO eventsKZ VALUES(?, ?, ?, ?, ?, ?)", values)
@@ -86,7 +105,7 @@ def addNewEvent(data: dict):
     logging.info(f"Добавил новый ивент: {values[0]}")
     if values[3]:
         date_ = values[3].split(".")
-        scheduler.add_job(deleteEvent, "date", run_date=date(date_[0], date_[1], date_[2]), args=(values[0]))
+        scheduler.add_job(deleteEvent, "date", run_date=date(int(date_[2]), int(date_[1]), int(date_[0])), args=(values[0]))
 
 def deleteEvent(name):
     cur.execute("DELETE FROM eventsKZ WHERE name = ?", (name,))

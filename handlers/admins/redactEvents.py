@@ -1,17 +1,19 @@
 import random
 import os
+import logging
 
+from asyncio import sleep
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, CallbackQuery
 
-from utils.db.eventsManager import Events, addNewEvent, deleteEvent, getEvents
+from utils.db.eventsManager import Events, addNewEvent, deleteEvent, getEvents, getEventInfoByName
 from data.languagePreset import languages as lang
 from data.languagePreset import general
 from states.states import AdminMenuStates, EventsStates
-from keyboards.admin import menu, redactEvents, skipBack
+from keyboards.admin import menu, redactEvents, skipBack, makeAnnounce
 from keyboards.user.inline import eventsPages
-from loader import db, bot, messageLettersLimit, scheduler
+from loader import db, bot, messageLettersLimit
 
 router = Router()
 
@@ -115,10 +117,13 @@ async def enter_resident_name(message: Message, state: FSMContext):
 async def enter_resident_number(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
     await message.answer(
-        text=lang[lg]["eventAdded"],
-        reply_markup=redactEvents.send_markup(lg)
+        text=lang[lg]["eventAdded"]
     )
-    await state.set_state(AdminMenuStates.event)
+    await message.answer(
+        text=lang[lg]["notifyAllUsers"],
+        reply_markup=makeAnnounce.send_markup(lg)
+    )
+    await state.set_state(EventsStates.notifyAllUsers)
 
     #Download file
     file_id = message.photo[-1].file_id
@@ -135,12 +140,85 @@ async def enter_resident_number(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
     await message.answer(
         text=lang[lg]["eventAdded"],
-        reply_markup=redactEvents.send_markup(lg)
     )
-    await state.set_state(AdminMenuStates.event)
+    await message.answer(
+        text=lang[lg]["notifyAllUsers"],
+        reply_markup=makeAnnounce.send_markup(lg)
+    )
+    await state.set_state(EventsStates.notifyAllUsers)
     await state.update_data(img = None)
 
     addNewEvent(await state.get_data())
+
+@router.message(EventsStates.notifyAllUsers, F.text.in_(makeAnnounce.yes))
+async def notify_all_users(message: Message, state: FSMContext):
+    lg = db.get_user_language(message.chat.id)
+    users = db.get_all_users()
+    data = await state.get_data()
+    await message.answer(
+        text=lang[lg]["sending..."],
+        reply_markup=redactEvents.send_markup(lg)
+    )
+    await state.set_state(AdminMenuStates.event)
+
+    #sending
+    for i in users:
+        await sleep(0.1)
+        eventInfo = getEventInfoByName(db.get_user_language(i[0]), data.get("name"))
+        if data.get("img") != None:
+            if eventInfo[1] != None:
+                try:
+                    await bot.send_photo(
+                        chat_id=i[0],
+                        caption=eventInfo[0],
+                        photo=eventInfo[2],
+                        reply_markup=eventInfo[1],
+                        parse_mode="Markdown"
+                    )
+                except:
+                    logging.info(f"Can't send to user: {i[0]}, because blocked")
+            else:
+                try:
+                    await bot.send_photo(
+                        chat_id=i[0],
+                        caption=eventInfo[0],
+                        photo=eventInfo[2],
+                        parse_mode="Markdown"
+                    )
+                except:
+                    logging.info(f"Can't send to user: {i[0]}, because blocked")
+        else:
+            if eventInfo[1] != None:
+                try:
+                    await bot.send_message(
+                        chat_id=i[0],
+                        text=eventInfo[0],
+                        reply_markup=eventInfo[1],
+                        parse_mode="Markdown"
+                    )
+                except:
+                    logging.info(f"Can't send to user: {i[0]}, because blocked")
+            else:
+                try:
+                    await bot.send_message(
+                        chat_id=i[0],
+                        text=eventInfo[0],
+                        parse_mode="Markdown"
+                    )
+                except:
+                    logging.info(f"Can't send to user: {i[0]}, because blocked")
+    await message.answer(
+        text=lang[lg]["messageSendedToEveryUser"]
+    )
+
+@router.message(EventsStates.notifyAllUsers, F.text.in_(makeAnnounce.no))
+async def not_notfying(message: Message, state: FSMContext):
+    lg = db.get_user_language()
+    await message.answer(
+        text=lang[lg]["ok"],
+        reply_markup=redactEvents.send_markup(lg)
+    )
+    await state.set_state(AdminMenuStates.event)
 
 
 
@@ -169,10 +247,10 @@ async def choosing_to_delete(query: CallbackQuery, callback_data: eventsPages.Ad
                 imageToDelete = i.image
     deleteEvent(eventToDelete.name)
     if imageToDelete != None:
-        os.remove({imageToDelete})
+        os.remove(imageToDelete)
     await bot.send_message(
         chat_id=query.message.chat.id,
-        text = "Deleted"
+        text = lang[lg]["deleted"]
     )
     if len(eventsPages.getInlinesAdmin(lg)):
         await bot.edit_message_reply_markup(

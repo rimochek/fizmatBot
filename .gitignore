@@ -1,6 +1,5 @@
 #LOGS
 *.log
-*.txt
 
 #IMAGES
 *.png
@@ -10,6 +9,7 @@
 *.db
 *.sqlite
 
+*.txt
 .vscode/
 .DS_Store
 __pycache__/

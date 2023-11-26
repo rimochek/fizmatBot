@@ -163,7 +163,7 @@ async def choosing_to_delete(query: CallbackQuery, callback_data: clubsPages.Adm
         os.remove(imageToDelete)
     await bot.send_message(
         chat_id=query.message.chat.id,
-        text = "Deleted",
+        text = lang[lg]["deleted"],
         reply_markup=menu.send_markup(lg)
     )
     await state.set_state(AdminMenuStates.menu)
