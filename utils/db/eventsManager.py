@@ -63,38 +63,42 @@ def getEventInfo(lg, callName):
     events = getEvents(lg)
     text = ""
     markup = []
+    inlineKeyboard = None
 
     for i in events:
         if i.callName == callName:
-            text = f"*{i.name}*"
+            text = f"<b>{i.name}</b>"
             if i.description != None:
-                text = text + f"\n\n*{lang[lg]['description']}*\n{i.description}"
+                text = text + f"\n\n<b>{lang[lg]['description']}</b>\n{i.description}"
             if i.date != None:
-                text = text + f"\n\n*{lang[lg]['date']}*\n{i.date}"
+                text = text + f"\n\n<b>{lang[lg]['date']}</b>\n{i.date}"
             if i.place != None:
-                text = text + f"\n\n*{lang[lg]['place']}*\n{i.place}"
+                text = text + f"\n\n<b>{lang[lg]['place']}</b>\n{i.place}"
             if i.link != None:
                 markup.append([InlineKeyboardButton(text="Instagram", url=i.link)])
-            return [text, InlineKeyboardMarkup(inline_keyboard=markup), FSInputFile(i.image)]
+                inlineKeyboard = InlineKeyboardMarkup(inline_keyboard=markup)
+            return [text, inlineKeyboard, FSInputFile(i.image)]
     return None
 
 def getEventInfoByName(lg, name):
     events = getEvents(lg)
     text = ""
     markup = []
+    inlineKeyboard = None
 
     for i in events:
         if i.name == name:
-            text = f"*{i.name}*"
+            text = f"<b>{i.name}</b>"
             if i.description != None:
-                text = text + f"\n\n*{lang[lg]['description']}*\n{i.description}"
+                text = text + f"\n\n<b>{lang[lg]['description']}</b>\n{i.description}"
             if i.date != None:
-                text = text + f"\n\n*{lang[lg]['date']}*\n{i.date}"
+                text = text + f"\n\n<b>{lang[lg]['date']}</b>\n{i.date}"
             if i.place != None:
-                text = text + f"\n\n*{lang[lg]['place']}*\n{i.place}"
+                text = text + f"\n\nb>{lang[lg]['place']}</b>\n{i.place}"
             if i.link != None:
-                markup.append([InlineKeyboardButton(text="Instagram", url=i.link)])
-            return [text, InlineKeyboardMarkup(inline_keyboard=markup), FSInputFile(i.image)]
+                markup = markup.append([InlineKeyboardButton(text="Link", url=i.link)])
+                inlineKeyboard = InlineKeyboardMarkup(inline_keyboard=markup)
+            return [text, inlineKeyboard, FSInputFile(i.image)]
     return None
 
 def addNewEvent(data: dict):

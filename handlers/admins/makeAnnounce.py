@@ -55,7 +55,7 @@ async def send_to_every(message: Message, state: FSMContext):
     await state.set_state(AdminMenuStates.menu)
     #sending for every user
     for i in users:
-        await sleep(0.1)
+        await sleep(0.03)
         if data.get("img") != None:
             try:
                 await bot.send_photo(

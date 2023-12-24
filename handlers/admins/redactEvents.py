@@ -66,7 +66,7 @@ async def add_club_description(message: Message, state: FSMContext):
             await state.update_data(description = message.text)
 
 @router.message(EventsStates.enterEventPlace)
-async def add_club_image(message: Message, state: FSMContext):
+async def add_event_image(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
     if message.text in skipBack.back:
         await back(message, state)
@@ -82,7 +82,7 @@ async def add_club_image(message: Message, state: FSMContext):
             await state.update_data(place = message.text)
 
 @router.message(EventsStates.enterEventDate)
-async def add_club_image(message: Message, state: FSMContext):
+async def add_event_image(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
     if message.text in skipBack.back:
         await back(message, state)
@@ -98,7 +98,7 @@ async def add_club_image(message: Message, state: FSMContext):
             await state.update_data(date = message.text)
 
 @router.message(EventsStates.enterEventLink)
-async def enter_resident_name(message: Message, state: FSMContext):
+async def enter_event_link(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
     if message.text in skipBack.back:
         await back(message, state)
@@ -114,7 +114,7 @@ async def enter_resident_name(message: Message, state: FSMContext):
             await state.update_data(link = message.text)
 
 @router.message(EventsStates.enterEventIMG, F.photo)
-async def enter_resident_number(message: Message, state: FSMContext):
+async def enter_event_img(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
     await message.answer(
         text=lang[lg]["eventAdded"]
@@ -136,7 +136,7 @@ async def enter_resident_number(message: Message, state: FSMContext):
     addNewEvent(await state.get_data())
 
 @router.message(EventsStates.enterEventIMG, F.text)
-async def enter_resident_number(message: Message, state: FSMContext):
+async def enter_event_img(message: Message, state: FSMContext):
     lg = db.get_user_language(message.from_user.id)
     await message.answer(
         text=lang[lg]["eventAdded"],
@@ -163,7 +163,7 @@ async def notify_all_users(message: Message, state: FSMContext):
 
     #sending
     for i in users:
-        await sleep(0.1)
+        await sleep(0.03)
         eventInfo = getEventInfoByName(db.get_user_language(i[0]), data.get("name"))
         if data.get("img") != None:
             if eventInfo[1] != None:
@@ -213,7 +213,7 @@ async def notify_all_users(message: Message, state: FSMContext):
 
 @router.message(EventsStates.notifyAllUsers, F.text.in_(makeAnnounce.no))
 async def not_notfying(message: Message, state: FSMContext):
-    lg = db.get_user_language()
+    lg = db.get_user_language(message.chat.id)
     await message.answer(
         text=lang[lg]["ok"],
         reply_markup=redactEvents.send_markup(lg)

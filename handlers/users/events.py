@@ -81,7 +81,7 @@ async def back_page(query: CallbackQuery, callback_data: AdminEventsInlinePages)
      )
 
 @router.callback_query(EventsInlinePages.filter())
-async def club_info(query: CallbackQuery, callback_data: EventsInlinePages):
+async def event_info(query: CallbackQuery, callback_data: EventsInlinePages):
     info = getEventInfo(db.get_user_language(query.message.chat.id), callback_data.event)
 
     if info[1] != None or info[1] != "":
@@ -90,14 +90,14 @@ async def club_info(query: CallbackQuery, callback_data: EventsInlinePages):
          photo=info[2],
          caption=info[0],
          reply_markup=info[1],
-         parse_mode="markdown"
+         parse_mode="HTML"
       )
     else:
       await bot.send_photo(
          chat_id=query.message.chat.id,
          photo=info[2],
          caption=info[0],
-         parse_mode="markdown"
+         parse_mode="HTML"
       )
 
 
